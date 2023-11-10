@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminJamPelajaranFormView extends StatefulWidget {
   final VoidCallback updateCallback;
-  const AdminJamPelajaranFormView({super.key, required this.updateCallback});
+  const AdminJamPelajaranFormView({Key? key, required this.updateCallback})
+      : super(key: key);
 
   @override
   State<AdminJamPelajaranFormView> createState() =>
@@ -25,19 +26,23 @@ class _AdminJamPelajaranFormViewState extends State<AdminJamPelajaranFormView> {
       return;
     }
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    tokenJwt = prefs.getString('tokenJwt');
+    String? tokenJwt = prefs.getString('tokenJwt');
     final String token = 'Bearer $tokenJwt';
 
     final jamKe = jamkeController.text;
     final pukull = pukulController.text;
 
     print('Bearer $tokenJwt');
-    final url = Uri.parse('https://jurnalmengajar-1-r8590722.deta.app/jampel');
+    final url =
+        Uri.parse('https://jurnalmengajar-1-r8590722.deta.app/jampel-tambah');
 
     final Map<String, dynamic> body = {
       'jam_ke': jamKe,
       'pukul': pukull,
+      'tenant_id': '651a3ea147a3d131b32ff353',
     };
+
+    print('Request Body: $body');
 
     final headers = {
       'accept': 'application/json',
@@ -45,7 +50,7 @@ class _AdminJamPelajaranFormViewState extends State<AdminJamPelajaranFormView> {
     };
 
     final response = await http.post(url, headers: headers, body: body);
-
+    print('Response Code: ${response.statusCode}');
     if (response.statusCode == 200) {
       print('Pembuatan jam pelajaran berhasil');
       widget.updateCallback();
@@ -53,12 +58,12 @@ class _AdminJamPelajaranFormViewState extends State<AdminJamPelajaranFormView> {
         setState(() {});
         Navigator.pop(context);
       });
-      // ignore: use_build_context_synchronously
     } else if (response.statusCode == 400) {
       print('Pembuatan jam $jamKe sudah ada');
+      print('Response Body: ${response.body}');
     } else {
       print('Pembuatan jam pelajaran gagal');
-      // ignore: use_build_context_synchronously
+      print('Response Body: ${response.body}');
     }
   }
 
