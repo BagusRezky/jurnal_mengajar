@@ -188,6 +188,12 @@ class AdminPeriodeState extends State<AdminPeriode> {
                             contentPadding:
                                 const EdgeInsets.fromLTRB(15, 8, 12, 8),
                           ),
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              loadData();
+                            }
+                            // _filterPeriodeData(value);
+                          },
                         ),
                       ),
                       IconButton(
