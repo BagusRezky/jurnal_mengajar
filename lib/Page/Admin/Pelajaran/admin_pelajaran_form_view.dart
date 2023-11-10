@@ -5,7 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminPelajaranForm extends StatefulWidget {
   final VoidCallback updateCallback;
-  const AdminPelajaranForm({super.key, required this.updateCallback});
+  const AdminPelajaranForm({Key? key, required this.updateCallback})
+      : super(key: key);
 
   @override
   State<AdminPelajaranForm> createState() => _AdminPelajaranFormState();
@@ -14,7 +15,7 @@ class AdminPelajaranForm extends StatefulWidget {
 class _AdminPelajaranFormState extends State<AdminPelajaranForm> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   TextEditingController nameController = TextEditingController();
-
+  TextEditingController tenantController = TextEditingController();
   String? tokenJwt = "";
 
   bool isAktif = true;
@@ -30,20 +31,22 @@ class _AdminPelajaranFormState extends State<AdminPelajaranForm> {
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran?page=1&limit=5');
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-tambah');
 
     final Map<String, dynamic> body = {
       'nama': name,
+      'tenant_id': '651a3ea147a3d131b32ff353',
       'is_aktif': '$isAktif',
     };
 
+    print('Request Body: $body');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
     final response = await http.post(url, headers: headers, body: body);
-
+    print('Response Code: ${response.statusCode}');
     if (response.statusCode == 200) {
       print('Pembuatan pelajaran berhasil');
       widget.updateCallback();
@@ -51,10 +54,13 @@ class _AdminPelajaranFormState extends State<AdminPelajaranForm> {
         setState(() {});
         Navigator.pop(context);
       });
-      // ignore: use_build_context_synchronously
+    } else if (response.statusCode == 404) {
+      print('Mata pelajaran Sudah Digunakan');
+      print('Response Body: ${response.body}');
+      // Handle 404 response (data already exists)
     } else {
-      print('Pembuatan pelajaran gagal');
-      // ignore: use_build_context_synchronously
+      print('Pembuatan periode gagal');
+      print('Response Body: ${response.body}');
     }
   }
 
