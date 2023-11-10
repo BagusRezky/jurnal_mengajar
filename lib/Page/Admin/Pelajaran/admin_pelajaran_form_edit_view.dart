@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jurnal_mengajar/Page/Admin/Pelajaran/admin_pelajaran_view.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminPelajaranFormEdit extends StatefulWidget {
@@ -9,10 +10,11 @@ class AdminPelajaranFormEdit extends StatefulWidget {
   final String pelajaranId;
   final VoidCallback updateCallback;
   const AdminPelajaranFormEdit(
-      {super.key,
+      {Key? key,
       required this.pelajaranData,
       required this.pelajaranId,
-      required this.updateCallback});
+      required this.updateCallback})
+      : super(key: key);
 
   @override
   State<AdminPelajaranFormEdit> createState() => _AdminPelajaranFormEditState();
@@ -38,23 +40,24 @@ class _AdminPelajaranFormEditState extends State<AdminPelajaranFormEdit> {
 
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
 
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran/${widget.pelajaranId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-hapus/${widget.pelajaranId}?tenant_id=$tenant');
 
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.delete(
-      url,
-      headers: headers,
-    );
+    final response = await http.post(url, headers: headers);
 
     if (response.statusCode == 200) {
       print('Delete pelajaran berhasil');
-
+      print('Response status code: ${response.statusCode}');
       widget.updateCallback();
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {});
@@ -81,21 +84,27 @@ class _AdminPelajaranFormEditState extends State<AdminPelajaranFormEdit> {
     final name = nameController.text;
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran/${widget.pelajaranId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-edit/${widget.pelajaranId}?tenant_id=$tenant');
 
     final Map<String, dynamic> body = {
       'nama': name,
       'is_aktif': '$isAktif',
     };
 
+    print('Request Body: $body');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.patch(url, headers: headers, body: body);
-
+    final response = await http.post(url, headers: headers, body: body);
+    print('Response Code: ${response.statusCode}');
     if (response.statusCode == 200) {
       print('Update pelajaran berhasil');
 
@@ -106,7 +115,7 @@ class _AdminPelajaranFormEditState extends State<AdminPelajaranFormEdit> {
       });
     } else {
       print('Update pelajaran gagal');
-      // ignore: use_build_context_synchronously
+      print('Response Body: ${response.body}');
     }
   }
 
