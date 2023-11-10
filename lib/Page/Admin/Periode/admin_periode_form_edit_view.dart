@@ -10,10 +10,11 @@ class AdminPeriodeFormEditView extends StatefulWidget {
   final String periodeId;
   final VoidCallback updateCallback;
   const AdminPeriodeFormEditView(
-      {super.key,
+      {Key? key,
       required this.periodeData,
       required this.periodeId,
-      required this.updateCallback});
+      required this.updateCallback})
+      : super(key: key);
 
   @override
   _AdminPeriodeFormEditViewState createState() =>
@@ -26,6 +27,7 @@ class _AdminPeriodeFormEditViewState extends State<AdminPeriodeFormEditView> {
   bool isAktif = false;
   String? tokenJwt = "";
   bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -46,33 +48,35 @@ class _AdminPeriodeFormEditViewState extends State<AdminPeriodeFormEditView> {
 
     tenant = decodedToken['tenant_id'];
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/periode-edit?periode_id=${widget.periodeId}&tenant_id=$tenant');
-
+        //'https://jurnalmengajar-1-r8590722.deta.app/periode-edit?periode_id=${widget.periodeId}&tenant_id=$tenant');
+        'https://jurnalmengajar-1-r8590722.deta.app/periode-hapus/${widget.periodeId}?tenant_id=$tenant');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.delete(
-      url,
-      headers: headers,
-    );
+    try {
+      final response = await http.post(url, headers: headers);
+      print('Response Code: ${response.statusCode}');
 
-    if (response.statusCode == 200) {
-      print('Delete periode berhasil');
-
-      widget.updateCallback();
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {});
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AdminPeriode(),
-            ));
-      });
-    } else {
-      print('Delete periode gagal');
-      print('Response status code: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print('Delete periode berhasil');
+        print('Response status code: ${response.statusCode}');
+        widget.updateCallback();
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {});
+          Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminPeriode(),
+              ));
+        });
+      } else {
+        print('Delete periode gagal');
+        print('Response status code: ${response.statusCode}');
+      }
+    } catch (error) {
+      print('Error: $error');
     }
   }
 
@@ -100,24 +104,31 @@ class _AdminPeriodeFormEditViewState extends State<AdminPeriodeFormEditView> {
       'is_aktif': '$isAktif',
     };
 
+    print('Request Body: $body');
+
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.patch(url, headers: headers, body: body);
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      print('Response Code: ${response.statusCode}');
 
-    if (response.statusCode == 200) {
-      print('Update periode berhasil');
+      if (response.statusCode == 200) {
+        print('Update periode berhasil');
 
-      widget.updateCallback();
-      Future.delayed(const Duration(seconds: 2), () {
+        widget.updateCallback();
+        // Future.delayed(const Duration(seconds: 2), () {
         setState(() {});
         Navigator.pop(context);
-      });
-    } else {
-      print('Update periode gagal');
-      // ignore: use_build_context_synchronously
+        // });
+      } else {
+        print('Update periode gagal');
+        print('Response Body: ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
     }
   }
 
