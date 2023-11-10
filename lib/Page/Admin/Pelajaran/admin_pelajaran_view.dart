@@ -345,7 +345,7 @@ class PelajaranSearch {
     tenant = decodedToken['tenant_id'];
 
     String urlStr =
-        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-cari?tenant_id=$tenant&fields=&sort_order=ascending&page=1&limit=10';
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-cari?tenant_id=$tenant&fields=jam_ke%2Cpukul&sort_order=ascending&page=1&limit=10';
     if (searchText != null && searchText.isNotEmpty) {
       urlStr += '&search=${Uri.encodeQueryComponent(searchText)}';
     }
@@ -369,7 +369,7 @@ class PelajaranSearch {
         return {'Data': []};
       }
     } else {
-      print('Gagal mengambil data periode: ${response.statusCode}');
+      print('Gagal mengambil data pelajaran: ${response.statusCode}');
       print('Response Body: ${response.body}');
       return {'Data': []};
     }
