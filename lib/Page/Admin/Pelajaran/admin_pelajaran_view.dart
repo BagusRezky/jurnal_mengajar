@@ -20,10 +20,10 @@ class AdminPelajaran extends StatefulWidget {
 enum SortOption { namaAscending, namaDescending, aktif }
 
 class AdminPelajaranState extends State<AdminPelajaran> {
-  final SortOption _sortOption = SortOption.namaAscending;
+  // final SortOption _sortOption = SortOption.namaAscending;
   TextEditingController searchController = TextEditingController();
   List<dynamic> pelajaranData = []; // List untuk menyimpan data pelajaran
-  List<dynamic> filteredPelajaranData = [];
+  // List<dynamic> filteredPelajaranData = [];
 
   @override
   void initState() {
@@ -53,28 +53,28 @@ class AdminPelajaranState extends State<AdminPelajaran> {
 
   void _filterPelajaranData(String searchText) async {
     // Kirim permintaan pencarian ke API dan perbarui filteredPelajaranData
-    final searchData = await PelajaranSearch.searchData(searchText);
+    final filteredData = await PelajaranSearch.searchData(searchText);
     setState(() {
-      filteredPelajaranData = searchData;
+      pelajaranData = filteredData['Data'];
     });
-    _sortPelajaranData();
+    // _sortPelajaranData();
   }
 
-  void _sortPelajaranData() {
-    setState(() {
-      switch (_sortOption) {
-        case SortOption.namaAscending:
-          pelajaranData.sort((a, b) => a['nama'].compareTo(b['nama']));
-          break;
-        case SortOption.namaDescending:
-          pelajaranData.sort((a, b) => b['nama'].compareTo(a['nama']));
-          break;
-        case SortOption.aktif:
-          pelajaranData.sort((a, b) => a['is_aktif'] ? -1 : 1);
-          break;
-      }
-    });
-  }
+  // void _sortPelajaranData() {
+  //   setState(() {
+  //     switch (_sortOption) {
+  //       case SortOption.namaAscending:
+  //         pelajaranData.sort((a, b) => a['nama'].compareTo(b['nama']));
+  //         break;
+  //       case SortOption.namaDescending:
+  //         pelajaranData.sort((a, b) => b['nama'].compareTo(a['nama']));
+  //         break;
+  //       case SortOption.aktif:
+  //         pelajaranData.sort((a, b) => a['is_aktif'] ? -1 : 1);
+  //         break;
+  //     }
+  //   });
+  // }
 //   void sortDataByName(bool ascending) {
 //   setState(() {
 //     filteredPelajaranData.sort((a, b) {
@@ -190,6 +190,12 @@ class AdminPelajaranState extends State<AdminPelajaran> {
                             contentPadding:
                                 const EdgeInsets.fromLTRB(15, 8, 12, 8),
                           ),
+                          onChanged: (value) {
+                            if (value.isEmpty) {
+                              loadData();
+                            }
+                            // _filterPeriodeData(value);
+                          },
                         ),
                       ),
                       IconButton(
@@ -329,14 +335,19 @@ class PelajaranDataUtil {
 }
 
 class PelajaranSearch {
-  static Future<List<dynamic>> searchData(String? searchText) async {
+  static Future<Map<String, dynamic>> searchData(String? searchText) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tokenJwt = prefs.getString('tokenJwt');
     final token = 'Bearer $tokenJwt';
+    String? tenant;
 
-    String urlStr = 'https://jurnalmengajar-1-r8590722.deta.app/pelajaran';
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+    tenant = decodedToken['tenant_id'];
+
+    String urlStr =
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-cari?tenant_id=$tenant&fields=&sort_order=ascending&page=1&limit=10';
     if (searchText != null && searchText.isNotEmpty) {
-      urlStr += '?search=$searchText';
+      urlStr += '&search=${Uri.encodeQueryComponent(searchText)}';
     }
     final url = Uri.parse(urlStr);
 
@@ -347,22 +358,20 @@ class PelajaranSearch {
 
     final response = await http.post(url, headers: headers);
 
+    print(response.statusCode);
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      if (searchText != null && searchText.toLowerCase() == 'aktif') {
-        return responseData
-            .where((pelajaran) => pelajaran['is_aktif'])
-            .toList();
-      } else if (searchText != null &&
-          searchText.toLowerCase() == 'tidak aktif') {
-        return responseData
-            .where((pelajaran) => !pelajaran['is_aktif'])
-            .toList();
+
+      if (responseData['IsError'] == false) {
+        return responseData;
+      } else {
+        print('Data tidak ditemukan');
+        return {'Data': []};
       }
-      return responseData;
     } else {
-      print('Gagal mengambil data pelajaran');
-      return [];
+      print('Gagal mengambil data periode: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      return {'Data': []};
     }
   }
 }
