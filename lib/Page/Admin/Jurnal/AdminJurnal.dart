@@ -35,7 +35,7 @@ class _AdminJurnalState extends State<AdminJurnal> {
     super.initState();
     _onDaySelected(selectedDate, selectedDate);
     // super.initState();
-    // showToken();
+    showToken();
     // loadData();
   }
 
@@ -231,9 +231,11 @@ class _AdminJurnalState extends State<AdminJurnal> {
                                       context,
                                       MaterialPageRoute(
                                         builder: (context) => AdminJurnalDetail(
-                                          jurnalData: const {},
-                                          jurnalId: 'id',
-                                          updateCallback: () {},
+                                          updateCallback: () =>
+                                              loadData(DateTime.now()),
+                                          jurnalData: Jurnal,
+                                          jurnalId: Jurnal['id'],
+                                          // updateCallback: () {},
                                         ),
                                       ),
                                     );
@@ -456,6 +458,7 @@ class JurnalDataUtil {
         'https://jurnalmengajar-1-r8590722.deta.app/jurnal-cari/admin?tanggal=$selectedDateFormatted&tenant_id=$tenantId&sort_order=ascending&page=1&limit=10');
     final response = await http.post(url, headers: headers);
 
+    print(response.statusCode);
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
       return responseData['Data']; // Ganti dengan nama yang sesuai di API
