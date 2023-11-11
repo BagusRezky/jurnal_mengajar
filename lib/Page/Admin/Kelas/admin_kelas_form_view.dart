@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminKelasForm extends StatefulWidget {
@@ -32,23 +33,28 @@ class _AdminKelasFormState extends State<AdminKelasForm> {
   Future<void> fetchDataPeriodeFromApi() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     tokenJwt = prefs.getString('tokenJwt');
-
+    String? tenant;
     final token = 'Bearer $tokenJwt';
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     print('Bearer $tokenJwt');
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/periode?page=1&limit=5');
+        //'https://jurnalmengajar-1-r8590722.deta.app/periode?page=1&limit=5');
+        'https://jurnalmengajar-1-r8590722.deta.app/periode-cari?tenant_id=$tenant&sort_order=ascending&page=1&limit=10');
 
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.get(url, headers: headers);
+    final response = await http.post(url, headers: headers);
 
     if (response.statusCode == 200) {
       var listData = jsonDecode(response.body);
       setState(() {
-        itemsPeriode = listData;
+        itemsPeriode = listData['Data'];
       });
     } else {
       throw Exception('Failed to load data from the API');
@@ -67,33 +73,39 @@ class _AdminKelasFormState extends State<AdminKelasForm> {
 
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
-    final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/kelas?page=1&limit=5');
+    final url =
+        Uri.parse('https://jurnalmengajar-1-r8590722.deta.app/kelas-tambah');
 
     final Map<String, dynamic> body = {
       'nama': name,
       'siswa': siswaa,
       'periode': selectedValuePeriode,
+      'tenant_id': '651a3ea147a3d131b32ff353'
     };
 
+    print('Request Body: $body');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
     final response = await http.post(url, headers: headers, body: body);
+    print('Response Code: ${response.statusCode}');
 
     if (response.statusCode == 200) {
-      print('Pembuatan kelas berhasil');
+      print('Pembuatan periode berhasil');
       widget.updateCallback();
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {});
         Navigator.pop(context);
       });
-      // ignore: use_build_context_synchronously
+    } else if (response.statusCode == 404) {
+      print('Periode Sudah Digunakan');
+      print('Response Body: ${response.body}');
+      // Handle 404 response (data already exists)
     } else {
-      print('Pembuatan kelas gagal');
-      // ignore: use_build_context_synchronously
+      print('Pembuatan periode gagal');
+      print('Response Body: ${response.body}');
     }
   }
 

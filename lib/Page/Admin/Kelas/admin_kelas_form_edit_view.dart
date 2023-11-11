@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jurnal_mengajar/Page/Admin/Kelas/admin_kelas_view.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminKelasFormEdit extends StatefulWidget {
@@ -45,22 +46,28 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     tokenJwt = prefs.getString('tokenJwt');
 
+    String? tenant;
     final token = 'Bearer $tokenJwt';
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     print('Bearer $tokenJwt');
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/periode?page=1&limit=5');
+        //'https://jurnalmengajar-1-r8590722.deta.app/periode?page=1&limit=5');
+        'https://jurnalmengajar-1-r8590722.deta.app/periode-cari?tenant_id=$tenant&sort_order=ascending&page=1&limit=10');
 
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.get(url, headers: headers);
+    final response = await http.post(url, headers: headers);
 
     if (response.statusCode == 200) {
       var listData = jsonDecode(response.body);
       setState(() {
-        itemsPeriode = listData;
+        itemsPeriode = listData['Data'];
       });
     } else {
       throw Exception('Failed to load data from the API');
@@ -82,7 +89,7 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
       'Authorization': token,
     };
 
-    final response = await http.delete(
+    final response = await http.post(
       url,
       headers: headers,
     );
@@ -142,7 +149,6 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
       });
     } else {
       print('Update kelas gagal');
-      // ignore: use_build_context_synchronously
     }
   }
 
@@ -419,11 +425,10 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
                               isLoading = true;
                             });
                             updateKelas(widget.kelasId);
-
-                            style:
-                            TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                            );
+                            // style:
+                            // TextButton.styleFrom(
+                            //   padding: EdgeInsets.zero,
+                            // );
                           },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,

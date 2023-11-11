@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jurnal_mengajar/Page/Admin/JamPelajaran/admin_jam_pelajaran_view.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminJamPelajaranFormEdit extends StatefulWidget {
@@ -9,10 +10,11 @@ class AdminJamPelajaranFormEdit extends StatefulWidget {
   final String jampelId;
   final VoidCallback updateCallback;
   const AdminJamPelajaranFormEdit(
-      {super.key,
+      {Key? key,
       required this.jamPelajaranData,
       required this.jampelId,
-      required this.updateCallback});
+      required this.updateCallback})
+      : super(key: key);
 
   @override
   State<AdminJamPelajaranFormEdit> createState() =>
@@ -40,16 +42,21 @@ class _AdminJamPelajaranFormEditState extends State<AdminJamPelajaranFormEdit> {
 
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+    tenant = decodedToken['tenant_id'];
 
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/jampel/${widget.jampelId}');
+        //'https://jurnalmengajar-1-r8590722.deta.app/jampel/${widget.jampelId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/jampel-hapus/${widget.jampelId}?tenant_id=$tenant');
 
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.delete(
+    final response = await http.post(
       url,
       headers: headers,
     );
@@ -84,20 +91,26 @@ class _AdminJamPelajaranFormEditState extends State<AdminJamPelajaranFormEdit> {
 
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/jampel/${widget.jampelId}');
+        //'https://jurnalmengajar-1-r8590722.deta.app/jampel/${widget.jampelId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/jampel-edit/${widget.jampelId}?tenant_id=$tenant');
 
     final Map<String, dynamic> body = {
       'jamke': jamKe,
       'pukul': pukull,
     };
-
+    print('Request Body: $body');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.patch(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
     if (response.statusCode == 200) {
       print('Update jam pelajaran berhasil');
@@ -109,7 +122,6 @@ class _AdminJamPelajaranFormEditState extends State<AdminJamPelajaranFormEdit> {
       });
     } else {
       print('Update jam pelajaran gagal');
-      // ignore: use_build_context_synchronously
     }
   }
 
@@ -330,11 +342,10 @@ class _AdminJamPelajaranFormEditState extends State<AdminJamPelajaranFormEdit> {
                               isLoading = true;
                             });
                             updateJampel(widget.jampelId);
-
-                            style:
-                            TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                            );
+                            // style:
+                            // TextButton.styleFrom(
+                            //   padding: EdgeInsets.zero,
+                            // );
                           },
                     style: TextButton.styleFrom(
                       padding: EdgeInsets.zero,
