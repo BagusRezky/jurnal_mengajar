@@ -91,23 +91,88 @@ class _DashboardAdminState extends State<DashboardAdmin> {
             flex: 1,
             child: Padding(
               padding: const EdgeInsets.fromLTRB(0, 0, 0, 120),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  const Calendar(),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 20,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 20),
-                          child: Row(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    const Calendar(),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 20,
+                        right: 20,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.max,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                    color: MainColor.secondaryColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        '50',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 70,
+                                          color: MainColor.primaryBackground,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Jurnal',
+                                        style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22,
+                                            color: MainColor.alternateColor),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  width: 150,
+                                  height: 150,
+                                  decoration: BoxDecoration(
+                                    color: MainColor.secondaryColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(
+                                        '50',
+                                        style: TextStyle(
+                                          fontFamily: 'Poppins',
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 70,
+                                          color: MainColor.primaryBackground,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Jadwal',
+                                        style: TextStyle(
+                                            fontFamily: 'Poppins',
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22,
+                                            color: MainColor.alternateColor),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Container(
@@ -120,7 +185,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      '50',
+                                      '15',
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
                                         fontWeight: FontWeight.bold,
@@ -129,13 +194,13 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                                       ),
                                     ),
                                     Text(
-                                      'Jurnal',
+                                      'Approval',
                                       style: TextStyle(
                                           fontFamily: 'Poppins',
                                           fontWeight: FontWeight.bold,
                                           fontSize: 22,
                                           color: MainColor.alternateColor),
-                                    )
+                                    ),
                                   ],
                                 ),
                               ),
@@ -149,7 +214,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                                 child: Column(
                                   children: [
                                     Text(
-                                      '50',
+                                      '30',
                                       style: TextStyle(
                                         fontFamily: 'Poppins',
                                         fontWeight: FontWeight.bold,
@@ -158,7 +223,7 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                                       ),
                                     ),
                                     Text(
-                                      'Jadwal',
+                                      'Belum Input',
                                       style: TextStyle(
                                           fontFamily: 'Poppins',
                                           fontWeight: FontWeight.bold,
@@ -170,74 +235,11 @@ class _DashboardAdminState extends State<DashboardAdmin> {
                               ),
                             ],
                           ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Container(
-                              width: 150,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                color: MainColor.secondaryColor,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '15',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 70,
-                                      color: MainColor.primaryBackground,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Approval',
-                                    style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 22,
-                                        color: MainColor.alternateColor),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 150,
-                              height: 150,
-                              decoration: BoxDecoration(
-                                color: MainColor.secondaryColor,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    '30',
-                                    style: TextStyle(
-                                      fontFamily: 'Poppins',
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 70,
-                                      color: MainColor.primaryBackground,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Belum Input',
-                                    style: TextStyle(
-                                        fontFamily: 'Poppins',
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 22,
-                                        color: MainColor.alternateColor),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
