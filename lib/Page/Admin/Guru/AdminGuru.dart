@@ -18,12 +18,19 @@ class AdminGuru extends StatefulWidget {
 class _AdminGuruState extends State<AdminGuru> {
   TextEditingController searchController = TextEditingController();
   List<dynamic> guruData = []; // List untuk menyimpan data guru
-  List<dynamic> filteredguruData = [];
+  // List<dynamic> filteredguruData = [];
 
   @override
   void initState() {
     super.initState();
+    showToken();
     loadData();
+  }
+
+  void showToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.get('tokenJwt');
+    print('$token');
   }
 
   Future<void> loadData() async {
@@ -41,9 +48,9 @@ class _AdminGuruState extends State<AdminGuru> {
 
   void _filterguruData(String searchText) async {
     // Kirim permintaan pencarian ke API dan perbarui filteredguruData
-    final searchData = await GuruSearch.searchData(searchText);
+    final filteredData = await GuruSearch.searchData(searchText);
     setState(() {
-      filteredguruData = searchData;
+      guruData = filteredData['Data'];
     });
   }
 
@@ -139,6 +146,12 @@ class _AdminGuruState extends State<AdminGuru> {
                                 contentPadding:
                                     const EdgeInsets.fromLTRB(15, 8, 12, 8),
                               ),
+                              onChanged: (value) {
+                                if (value.isEmpty) {
+                                  loadData();
+                                }
+                                // _filterPeriodeData(value);
+                              },
                             ),
                           ),
                           IconButton(
@@ -352,7 +365,7 @@ class JadwalGuruDataUtil {
 }
 
 class GuruSearch {
-  static Future<List<dynamic>> searchData(String? searchText) async {
+  static Future<Map<String, dynamic>> searchData(String? searchText) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tokenJwt = prefs.getString('tokenJwt');
     final token = 'Bearer $tokenJwt';
@@ -362,9 +375,10 @@ class GuruSearch {
 
     tenantId = decodedToken['tenant_id'];
     String urlStr =
-        'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&sort_order=ascending';
+        //'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&fields=&sort_order=ascending';
+        'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&fields=nama%2Cjabatan&sort_order=ascending&page=1&limit=10';
     if (searchText != null && searchText.isNotEmpty) {
-      urlStr += '?search=$searchText';
+      urlStr += '&search=${Uri.encodeQueryComponent(searchText)}';
     }
     final url = Uri.parse(urlStr);
 
@@ -374,19 +388,33 @@ class GuruSearch {
     };
 
     final response = await http.post(url, headers: headers);
-
+    print(response.statusCode);
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      if (searchText != null && searchText.toLowerCase() == 'aktif') {
-        return responseData.where((guru) => guru['is_aktif']).toList();
-      } else if (searchText != null &&
-          searchText.toLowerCase() == 'tidak aktif') {
-        return responseData.where((guru) => !guru['is_aktif']).toList();
+
+      if (responseData['IsError'] == false) {
+        return responseData;
+      } else {
+        print('Data tidak ditemukan');
+        return {'Data': []};
       }
-      return responseData;
     } else {
-      print('Gagal mengambil data guru');
-      return [];
+      print('Gagal mengambil data pelajaran: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      return {'Data': []};
     }
+    // if (response.statusCode == 200) {
+    //   final responseData = json.decode(response.body);
+    //   if (searchText != null && searchText.toLowerCase() == 'aktif') {
+    //     return responseData.where((guru) => guru['is_aktif']).toList();
+    //   } else if (searchText != null &&
+    //       searchText.toLowerCase() == 'tidak aktif') {
+    //     return responseData.where((guru) => !guru['is_aktif']).toList();
+    //   }
+    //   return responseData;
+    // } else {
+    //   print('Gagal mengambil data guru');
+    //   return {'Data': []};
+    // }
   }
 }
