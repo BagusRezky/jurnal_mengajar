@@ -10,17 +10,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AdminKelasFormEdit extends StatefulWidget {
   final Map<String, dynamic> kelasData;
   final String kelasId;
-
+  final VoidCallback updateCallback;
   const AdminKelasFormEdit(
-      {super.key,
+      {Key? key,
       required this.kelasData,
-      required Future<void> Function() updateCallback,
-      required this.kelasId});
+      //required Future<void> Function() updateCallback,
+      required this.updateCallback,
+      required this.kelasId})
+      : super(key: key);
 
   @override
   State<AdminKelasFormEdit> createState() => _AdminKelasFormEditState();
 
-  void updateCallback() {}
+  // void updateCallback() {}
 }
 
 class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
@@ -80,9 +82,14 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
 
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
 
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/kelas/${widget.kelasId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/kelas-hapus/${widget.kelasId}?tenant_id=$tenant');
 
     final headers = {
       'accept': 'application/json',
@@ -123,32 +130,38 @@ class _AdminKelasFormEditState extends State<AdminKelasFormEdit> {
     final siswaa = siswaController.text.toString();
     final token = 'Bearer $tokenJwt';
     print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
     final url = Uri.parse(
-        'https://jurnalmengajar-1-r8590722.deta.app/kelas/${widget.kelasId}');
+        'https://jurnalmengajar-1-r8590722.deta.app/kelas-edit/${widget.kelasId}?tenant_id=$tenant');
 
     final Map<String, dynamic> body = {
       'nama': name,
       'siswa': siswaa,
       'periode': selectedValuePeriode,
     };
-
+    print('responseBody: $body');
     final headers = {
       'accept': 'application/json',
       'Authorization': token,
     };
 
-    final response = await http.patch(url, headers: headers, body: body);
+    final response = await http.post(url, headers: headers, body: body);
 
+    print('Response Code: ${response.statusCode}');
     if (response.statusCode == 200) {
-      print('Update kelas berhasil');
-
+      print('Update pelajaran berhasil');
       widget.updateCallback();
       Future.delayed(const Duration(seconds: 2), () {
         setState(() {});
         Navigator.pop(context);
       });
     } else {
-      print('Update kelas gagal');
+      print('Update pelajaran gagal');
+      print('Response Body: ${response.body}');
     }
   }
 
