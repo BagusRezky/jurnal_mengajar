@@ -7,6 +7,7 @@ import 'package:jurnal_mengajar/Page/Admin/Jurnal/AdminJurnal.dart';
 import 'package:jurnal_mengajar/Page/Admin/admin_setting.dart';
 import 'package:jurnal_mengajar/Page/Admin/dashboard_admin.dart';
 
+import '../Page/Account/akun_login.dart';
 import '../Page/Admin/Jadwal/AdminJadwal.dart';
 import '../Page/Admin/JamPelajaran/admin_jam_pelajaran_view.dart';
 import '../Page/Admin/Kelas/admin_kelas_view.dart';
@@ -467,7 +468,9 @@ class _AdminDrawerState extends State<AdminDrawer> {
               thickness: 2,
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                Get.to(const AkunLogin());
+              },
               child: SizedBox(
                 height: 40,
                 width: double.infinity,
