@@ -218,7 +218,7 @@ class _AdminJurnalDetailState extends State<AdminJurnalDetail> {
                                     ),
                                   ),
                                   Text(
-                                    '${widget.jurnalData['pukul']}',
+                                    '${widget.jurnalData['Pukul']}',
                                     textAlign: TextAlign.start,
                                     overflow: TextOverflow.clip,
                                     style: const TextStyle(
@@ -262,7 +262,7 @@ class _AdminJurnalDetailState extends State<AdminJurnalDetail> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 11, 20, 0),
                       child: Text(
-                        '${widget.jurnalData['catatan']}',
+                        '${widget.jurnalData['Catatan']}',
                         textAlign: TextAlign.start,
                         overflow: TextOverflow.clip,
                         style: const TextStyle(
@@ -280,133 +280,139 @@ class _AdminJurnalDetailState extends State<AdminJurnalDetail> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         mainAxisSize: MainAxisSize.max,
                         children: [
-                          Container(
-                            margin: const EdgeInsets.fromLTRB(0, 0, 17, 0),
-                            padding: const EdgeInsets.all(0),
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: const Color(0xffeddacb),
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(10.0),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.fromLTRB(0, 0, 17, 0),
+                              padding: const EdgeInsets.all(0),
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: const Color(0xffeddacb),
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(0, 13, 0, 0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    const Text(
+                                      "Sakit",
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.clip,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 15,
+                                        color: Color(0xff000000),
+                                      ),
+                                    ),
+                                    Text(
+                                      '${widget.jurnalData['Absensi Sakit']}',
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.clip,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 40,
+                                        color: Color(0xff335ca4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(0, 13, 0, 0),
+                          ),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.fromLTRB(0, 0, 17, 0),
+                              padding: const EdgeInsets.all(0),
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: const Color(0xffedd9c8),
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 mainAxisSize: MainAxisSize.max,
                                 children: [
-                                  const Text(
-                                    "Sakit",
-                                    textAlign: TextAlign.start,
-                                    overflow: TextOverflow.clip,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 15,
-                                      color: Color(0xff000000),
+                                  const Padding(
+                                    padding: EdgeInsets.fromLTRB(0, 13, 0, 0),
+                                    child: Text(
+                                      "Izin",
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.clip,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 18,
+                                        color: Color(0xff000000),
+                                      ),
                                     ),
                                   ),
                                   Text(
-                                    '${widget.jurnalData['Absensi Sakit']}',
+                                    '${widget.jurnalData['Absensi Izin']}',
                                     textAlign: TextAlign.start,
                                     overflow: TextOverflow.clip,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w700,
                                       fontStyle: FontStyle.normal,
                                       fontSize: 40,
-                                      color: Color(0xff335ca4),
+                                      color: Color(0xff325ca6),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                          Container(
-                            margin: const EdgeInsets.fromLTRB(0, 0, 17, 0),
-                            padding: const EdgeInsets.all(0),
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: const Color(0xffedd9c8),
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 13, 0, 0),
-                                  child: Text(
-                                    "Izin",
-                                    textAlign: TextAlign.start,
-                                    overflow: TextOverflow.clip,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      fontStyle: FontStyle.normal,
-                                      fontSize: 18,
-                                      color: Color(0xff000000),
+                          Expanded(
+                            child: Container(
+                              margin: const EdgeInsets.all(0),
+                              padding: const EdgeInsets.all(0),
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                color: const Color(0xffeddaca),
+                                shape: BoxShape.rectangle,
+                                borderRadius: BorderRadius.circular(10.0),
+                              ),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.max,
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.fromLTRB(0, 13, 0, 0),
+                                    child: Text(
+                                      "Alpha",
+                                      textAlign: TextAlign.start,
+                                      overflow: TextOverflow.clip,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 18,
+                                        color: Color(0xff000000),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  '${widget.jurnalData['Absensi Izin']}',
-                                  textAlign: TextAlign.start,
-                                  overflow: TextOverflow.clip,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 40,
-                                    color: Color(0xff325ca6),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            margin: const EdgeInsets.all(0),
-                            padding: const EdgeInsets.all(0),
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: const Color(0xffeddaca),
-                              shape: BoxShape.rectangle,
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.max,
-                              children: [
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 13, 0, 0),
-                                  child: Text(
-                                    "Alpha",
+                                  Text(
+                                    '${widget.jurnalData['Absensi Alpha']}',
                                     textAlign: TextAlign.start,
                                     overflow: TextOverflow.clip,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
                                       fontStyle: FontStyle.normal,
-                                      fontSize: 18,
-                                      color: Color(0xff000000),
+                                      fontSize: 40,
+                                      color: Color(0xff335da8),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  '${widget.jurnalData['Absensi Alpha']}',
-                                  textAlign: TextAlign.start,
-                                  overflow: TextOverflow.clip,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 40,
-                                    color: Color(0xff335da8),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ],

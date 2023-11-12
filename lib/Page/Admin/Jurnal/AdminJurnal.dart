@@ -23,7 +23,7 @@ class AdminJurnal extends StatefulWidget {
 }
 
 class _AdminJurnalState extends State<AdminJurnal> {
-  TextEditingController searchController = TextEditingController();
+  // TextEditingController searchController = TextEditingController();
   List<dynamic> jurnalData = []; // List untuk menyimpan data periode
   List<dynamic> filteredJurnalData = [];
   bool isSelesai = false;
@@ -50,7 +50,7 @@ class _AdminJurnalState extends State<AdminJurnal> {
     var data = await JurnalDataUtil.fetchData(date);
     if (data != null) {
       setState(() {
-        jurnalData = data;
+        jurnalData = data['Data'];
         isSelesai = true;
       });
     } else {
@@ -438,7 +438,7 @@ class _AdminJurnalState extends State<AdminJurnal> {
 }
 
 class JurnalDataUtil {
-  static Future<List<dynamic>?> fetchData(DateTime selectedDate) async {
+  static Future<Map<String, dynamic>> fetchData(DateTime selectedDate) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tokenJwt = prefs.getString('tokenJwt');
 
@@ -461,10 +461,10 @@ class JurnalDataUtil {
     print(response.statusCode);
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      return responseData['Data']; // Ganti dengan nama yang sesuai di API
+      return responseData; // Ganti dengan nama yang sesuai di API
     } else {
       print('Gagal mengambil data jurnal');
-      return null;
+      return {};
     }
   }
 }
