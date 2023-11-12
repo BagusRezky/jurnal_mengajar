@@ -178,11 +178,15 @@ class _AdminGuruState extends State<AdminGuru> {
                       ''; // Ganti 'foto' dengan nama field base64 gambar
                   Uint8List? imageBytes;
 
-                  if (base64Image.isNotEmpty) {
-                    imageBytes = base64Decode(base64Image.split(',').last);
-                    print('Berhasil');
-                  } else {
-                    print('Gagal');
+                  try {
+                    if (base64Image.isNotEmpty) {
+                      imageBytes = base64Decode(base64Image.split(',').last);
+                      print('Berhasil');
+                    } else {
+                      print('Gagal: base64Image is empty');
+                    }
+                  } catch (e) {
+                    print('Error decoding base64: $e');
                   }
                   const EdgeInsets.symmetric(vertical: 0, horizontal: 15);
                   return Column(
@@ -236,7 +240,7 @@ class _AdminGuruState extends State<AdminGuru> {
                                           ),
                                         )
                                       : Image.asset(
-                                          'assets/images/guru1.png',
+                                          'assets/images/guru1.jpg',
                                           width: 40,
                                           height: 40,
                                         ),
@@ -376,7 +380,7 @@ class GuruSearch {
     tenantId = decodedToken['tenant_id'];
     String urlStr =
         //'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&fields=&sort_order=ascending';
-        'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&fields=nama%2Cjabatan&sort_order=ascending&page=1&limit=10';
+        'https://jurnalmengajar-1-r8590722.deta.app/guru-cari?tenant_id=$tenantId&fields=&sort_order=ascending&page=1&limit=10';
     if (searchText != null && searchText.isNotEmpty) {
       urlStr += '&search=${Uri.encodeQueryComponent(searchText)}';
     }
@@ -387,20 +391,25 @@ class GuruSearch {
       'Authorization': token,
     };
 
-    final response = await http.post(url, headers: headers);
-    print(response.statusCode);
-    if (response.statusCode == 200) {
-      final responseData = json.decode(response.body);
+    try {
+      final response = await http.post(url, headers: headers);
 
-      if (responseData['IsError'] == false) {
-        return responseData;
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        if (responseData['IsError'] == false) {
+          return responseData;
+        } else {
+          print('Data tidak ditemukan');
+          return {'Data': []};
+        }
       } else {
-        print('Data tidak ditemukan');
+        print('Gagal mengambil data pelajaran: ${response.statusCode}');
+        print('Response Body: ${response.body}');
         return {'Data': []};
       }
-    } else {
-      print('Gagal mengambil data pelajaran: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+    } catch (e) {
+      print('Error: $e');
       return {'Data': []};
     }
     // if (response.statusCode == 200) {
