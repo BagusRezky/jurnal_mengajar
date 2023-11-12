@@ -1,7 +1,7 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:jurnal_mengajar/Page/Admin/Jadwal/admin_jadwal_form.dart';
@@ -32,6 +32,7 @@ class _AdminJadwalState extends State<AdminJadwal> {
   void initState() {
     super.initState();
     _onDaySelected(selectedDate, selectedDate);
+    showToken();
   }
 
   Future<void> _onDaySelected(DateTime day, DateTime focusedDay) async {
@@ -45,7 +46,7 @@ class _AdminJadwalState extends State<AdminJadwal> {
     var data = await JadwalDataUtil.fetchData(date);
     if (data != null) {
       setState(() {
-        jadwalData = data;
+        jadwalData = data['Data'];
         isSelesai = true;
       });
     } else {
@@ -53,6 +54,18 @@ class _AdminJadwalState extends State<AdminJadwal> {
         jadwalData = [];
       });
     }
+  }
+
+  void showToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final token = prefs.get('tokenJwt');
+    print('$token');
+  }
+
+  void _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('tokenJwt'); // Menghapus token dari SharedPreferences
+    SystemNavigator.pop();
   }
 
   @override
@@ -221,7 +234,8 @@ class _AdminJadwalState extends State<AdminJadwal> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             AdminJadwalFormEdit(
-                                          updateCallback: loadData,
+                                          updateCallback: () =>
+                                              loadData(DateTime.now()),
                                           jadwalData: Jadwal,
                                           jadwalId: Jadwal['id'],
                                         ),
@@ -416,7 +430,7 @@ class _AdminJadwalState extends State<AdminJadwal> {
 }
 
 class JadwalDataUtil {
-  static Future<List<dynamic>?> fetchData(DateTime selectedDate) async {
+  static Future<Map<String, dynamic>> fetchData(DateTime selectedDate) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? tokenJwt = prefs.getString('tokenJwt');
 
@@ -436,12 +450,13 @@ class JadwalDataUtil {
         'https://jurnalmengajar-1-r8590722.deta.app/jadwal-cari/admin?tanggal=$selectedDateFormatted&tenant_id=$tenantId&sort_order=ascending&page=1&limit=10');
     final response = await http.post(url, headers: headers);
 
+    print(response.statusCode);
     if (response.statusCode == 200) {
       final responseData = json.decode(response.body);
-      return responseData['Data']; // Ganti dengan nama yang sesuai di API
+      return responseData; // Ganti dengan nama yang sesuai di API
     } else {
       print('Gagal mengambil data jadwal');
-      return null;
+      return {};
     }
   }
 }

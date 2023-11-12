@@ -399,8 +399,7 @@ class _AdminJadwalMingguanState extends State<AdminJadwalMingguan> {
                                     fit: BoxFit.cover),
                               ),
                             ),
-                            const Expanded(
-                              flex: 1,
+                            const Flexible(
                               child: Padding(
                                 padding: EdgeInsets.fromLTRB(14, 6, 0, 0),
                                 child: Column(
@@ -469,20 +468,22 @@ class _AdminJadwalMingguanState extends State<AdminJadwalMingguan> {
                                             CrossAxisAlignment.center,
                                         mainAxisSize: MainAxisSize.max,
                                         children: [
-                                          Text(
-                                            "2023/2024 Genap",
-                                            textAlign: TextAlign.start,
-                                            overflow: TextOverflow.clip,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w400,
-                                              fontStyle: FontStyle.normal,
-                                              fontSize: 14,
-                                              color: Colors.white,
+                                          Expanded(
+                                            child: Text(
+                                              "2023/2024 Genap",
+                                              textAlign: TextAlign.start,
+                                              overflow: TextOverflow.clip,
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w400,
+                                                fontStyle: FontStyle.normal,
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
                                             ),
                                           ),
                                           Padding(
                                             padding: EdgeInsets.fromLTRB(
-                                                80, 0, 0, 0),
+                                                38, 0, 0, 0),
                                             child: Text(
                                               "Animasi 2D",
                                               textAlign: TextAlign.start,
@@ -535,8 +536,7 @@ class _AdminJadwalMingguanState extends State<AdminJadwalMingguan> {
                                     fit: BoxFit.cover),
                               ),
                             ),
-                            const Expanded(
-                              flex: 1,
+                            const Flexible(
                               child: Padding(
                                 padding: EdgeInsets.fromLTRB(14, 6, 0, 0),
                                 child: Column(
