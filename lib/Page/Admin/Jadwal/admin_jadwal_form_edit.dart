@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
+import 'package:jurnal_mengajar/Page/Admin/Jadwal/AdminJadwal.dart';
 import 'package:jurnal_mengajar/color/color.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,10 +24,15 @@ class AdminJadwalFormEdit extends StatefulWidget {
   State<AdminJadwalFormEdit> createState() => _AdminJadwalFormEditState();
 }
 
+DateTime dateTime = DateTime.timestamp();
+
+// Format the DateTime using intl package
+String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
+
 class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController date = TextEditingController(
-      text: DateFormat('yyyy MMMM dd').format(DateTime.now()));
+  final TextEditingController _date =
+      TextEditingController(text: formattedDate);
   TextEditingController catatanController = TextEditingController();
   bool isLoading = false;
   //bool isAktif = true;
@@ -56,6 +62,7 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
   @override
   void initState() {
     super.initState();
+    catatanController.text = widget.jadwalData['catatan'].toString();
     fetchDataPeriodeFromApi();
     fetchDataJamFromApi();
     fetchDataKelasFromApi();
@@ -213,6 +220,49 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
     }
   }
 
+  Future<void> deleteJadwal(String jadwalId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    tokenJwt = prefs.getString('tokenJwt');
+
+    final token = 'Bearer $tokenJwt';
+    print('Bearer $tokenJwt');
+    String? tenant;
+
+    Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+
+    tenant = decodedToken['tenant_id'];
+
+    final url = Uri.parse(
+        'https://jurnalmengajar-1-r8590722.deta.app/jadwal-hapus/${widget.jadwalId}?tenant_id=$tenant');
+
+    final headers = {
+      'accept': 'application/json',
+      'Authorization': token,
+    };
+
+    final response = await http.post(
+      url,
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      print('Delete kelas berhasil');
+
+      widget.updateCallback();
+      Future.delayed(const Duration(seconds: 2), () {
+        setState(() {});
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const AdminJadwal(),
+            ));
+      });
+    } else {
+      print('Delete kelas gagal');
+      print('Response status code: ${response.statusCode}');
+    }
+  }
+
   Future<void> updateJadwal(String jadwalId) async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -232,7 +282,7 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
 
     final Map<String, dynamic> body = {
       'catatan': ctt,
-      'tanggal': date,
+      'tanggal': _date.text,
       'periode': selectedValuePeriode,
       'pukul': selectedValueJam,
       'guru': selectedValueGuru,
@@ -247,19 +297,22 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
       'accept': 'application/json',
       'Authorization': token,
     };
-
-    final response = await http.post(url, headers: headers, body: body);
-    print('Response Code: ${response.statusCode}');
-    if (response.statusCode == 200) {
-      print('Pembuatan jadwal berhasil');
-      widget.updateCallback();
-      Future.delayed(const Duration(seconds: 2), () {
-        setState(() {});
-        Navigator.pop(context);
-      });
-    } else {
-      print('Pembuatan jadwal gagal');
-      print('Response Body: ${response.body}');
+    try {
+      final response = await http.post(url, headers: headers, body: body);
+      print('Response Code: ${response.statusCode}');
+      if (response.statusCode == 200) {
+        print('Pembuatan jadwal berhasil');
+        widget.updateCallback();
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {});
+          Navigator.pop(context);
+        });
+      } else {
+        print('Pembuatan jadwal gagal');
+        print('Response Body: ${response.body}');
+      }
+    } catch (error) {
+      print('Error: $error');
     }
   }
 
@@ -294,115 +347,69 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
             size: 26,
           ),
         ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.fromLTRB(0, 0, 20, 0),
-            child: Icon(
-              Icons.delete,
-              color: Color(0xffffffff),
-              size: 30,
-            ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Konfirmasi'),
+                      content: const Text('Yakin ingin menghapus data?'),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Tidak'),
+                        ),
+                        ElevatedButton(
+                            onPressed: () {
+                              deleteJadwal(widget.jadwalId);
+                            },
+                            child: const Text('Ya'))
+                      ],
+                    );
+                  });
+            },
+            icon: const Icon(Icons.delete),
+            color: const Color(0xffffffff),
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: Stack(
-          alignment: Alignment.bottomRight,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 110),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.max,
-                  children: [
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 0, horizontal: 20),
-                      padding: const EdgeInsets.all(0),
-                      width: MediaQuery.of(context).size.width,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0x1fffffff),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Text(
-                            "Periode",
-                            textAlign: TextAlign.start,
-                            overflow: TextOverflow.clip,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 16,
-                              color: Color(0xff000000),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
-                            child: Container(
-                                width: MediaQuery.of(context).size.width,
-                                height: 50,
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 4, horizontal: 8),
-                                decoration: BoxDecoration(
-                                  color: MainColor.primaryBackground,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton(
-                                    value: selectedValuePeriode,
-                                    items: itemsPeriode.map((item) {
-                                      return DropdownMenuItem(
-                                        value: item['nama'],
-                                        child: Text(item['nama']),
-                                      );
-                                    }).toList(),
-                                    style: const TextStyle(
-                                      color: Color(0xff000000),
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                      fontStyle: FontStyle.normal,
-                                    ),
-                                    onChanged: (value) {
-                                      setState(() {
-                                        selectedValuePeriode = value as String?;
-                                      });
-                                    },
-                                    elevation: 8,
-                                    isExpanded: true,
-                                  ),
-                                )),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-                      padding: const EdgeInsets.all(0),
-                      width: MediaQuery.of(context).size.width,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0x00fafafa),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                            child: Text(
-                              "Tanggal",
+      body: SafeArea(
+        top: true,
+        child: Form(
+          key: _formKey,
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 110),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 20),
+                        padding: const EdgeInsets.all(0),
+                        width: MediaQuery.of(context).size.width,
+                        height: 75,
+                        decoration: const BoxDecoration(
+                          color: Color(0x1fffffff),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Text(
+                              "Periode",
                               textAlign: TextAlign.start,
                               overflow: TextOverflow.clip,
                               style: TextStyle(
@@ -412,103 +419,10 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
                                 color: Color(0xff000000),
                               ),
                             ),
-                          ),
-                          TextField(
-                            controller: date,
-                            obscureText: false,
-                            textAlign: TextAlign.start,
-                            maxLines: 1,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w400,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 14,
-                              color: Color(0xff000000),
-                            ),
-                            decoration: InputDecoration(
-                              disabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4.0),
-                                borderSide: const BorderSide(
-                                    color: Color(0x00000000), width: 1),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4.0),
-                                borderSide: const BorderSide(
-                                    color: Color(0x00000000), width: 1),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4.0),
-                                borderSide: const BorderSide(
-                                    color: Color(0x00000000), width: 1),
-                              ),
-                              hintText: "Enter Text",
-                              hintStyle: const TextStyle(
-                                fontWeight: FontWeight.w400,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 14,
-                                color: Color(0xff000000),
-                              ),
-                              filled: true,
-                              fillColor: MainColor.primaryBackground,
-                              isDense: false,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 12),
-                              suffixIcon: const Icon(Icons.calendar_today,
-                                  color: Color(0xff212435), size: 24),
-                            ),
-                            onTap: () async {
-                              DateTime? pickedDate = await showDatePicker(
-                                  context: context,
-                                  initialDate: DateTime.now(),
-                                  firstDate: DateTime(2000),
-                                  lastDate: DateTime(2100));
-
-                              if (pickedDate != null) {
-                                setState(() {
-                                  date.text = DateFormat('yyyy-MM-dd')
-                                      .format(pickedDate);
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                      padding: const EdgeInsets.all(0),
-                      width: double.infinity,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: Color(0x00ffffff),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                                child: Text(
-                                  "Jam Ke",
-                                  textAlign: TextAlign.start,
-                                  overflow: TextOverflow.clip,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontStyle: FontStyle.normal,
-                                    fontSize: 16,
-                                    color: Color(0xff000000),
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                  width: 120,
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 5, 0, 0),
+                              child: Container(
+                                  width: MediaQuery.of(context).size.width,
                                   height: 50,
                                   padding: const EdgeInsets.symmetric(
                                       vertical: 4, horizontal: 8),
@@ -518,12 +432,20 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton(
-                                      value: selectedValueJam,
-                                      items: itemsJam.map((item) {
+                                      hint: const Text(
+                                        "Pilih Periode",
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w400,
+                                          fontStyle: FontStyle.normal,
+                                          fontSize: 14,
+                                          color: Color(0xff000000),
+                                        ),
+                                      ),
+                                      value: selectedValuePeriode,
+                                      items: itemsPeriode.map((item) {
                                         return DropdownMenuItem(
-                                          value: item['jam_ke'].toString(),
-                                          child:
-                                              Text(item['jam_ke'].toString()),
+                                          value: item['nama'],
+                                          child: Text(item['nama']),
                                         );
                                       }).toList(),
                                       style: const TextStyle(
@@ -534,245 +456,52 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
                                       ),
                                       onChanged: (value) {
                                         setState(() {
-                                          selectedValueJam = value;
+                                          selectedValuePeriode =
+                                              value as String?;
                                         });
                                       },
                                       elevation: 8,
                                       isExpanded: true,
                                     ),
                                   )),
-                            ],
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
-                                    child: Text(
-                                      "Kelas",
-                                      textAlign: TextAlign.start,
-                                      overflow: TextOverflow.clip,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                        fontStyle: FontStyle.normal,
-                                        fontSize: 16,
-                                        color: Color(0xff000000),
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                      height: 50,
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 4, horizontal: 8),
-                                      decoration: BoxDecoration(
-                                        color: MainColor.primaryBackground,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton(
-                                          value: selectedValueKelas,
-                                          items: itemsKelas.map((item) {
-                                            return DropdownMenuItem(
-                                              value: item['nama'],
-                                              child: Text(item['nama']),
-                                            );
-                                          }).toList(),
-                                          style: const TextStyle(
-                                            color: Color(0xff000000),
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w400,
-                                            fontStyle: FontStyle.normal,
-                                          ),
-                                          onChanged: (value) {
-                                            setState(() {
-                                              selectedValueKelas =
-                                                  value as String?;
-                                            });
-                                          },
-                                          elevation: 8,
-                                          isExpanded: true,
-                                        ),
-                                      )),
-                                ],
-                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-                      padding: const EdgeInsets.all(0),
-                      width: MediaQuery.of(context).size.width,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0x00ffffff),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                            child: Text(
-                              "Pelajaran",
-                              textAlign: TextAlign.start,
-                              overflow: TextOverflow.clip,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 16,
-                                color: Color(0xff000000),
-                              ),
-                            ),
-                          ),
-                          Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: 50,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: MainColor.primaryBackground,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton(
-                                  value: selectedValuePelajaran,
-                                  items: itemsPelajaran.map((item) {
-                                    return DropdownMenuItem(
-                                      value: item['nama'],
-                                      child: Text(item['nama']),
-                                    );
-                                  }).toList(),
-                                  style: const TextStyle(
-                                    color: Color(0xff000000),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    fontStyle: FontStyle.normal,
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedValuePelajaran = value as String?;
-                                    });
-                                  },
-                                  elevation: 8,
-                                  isExpanded: true,
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
+                        padding: const EdgeInsets.all(0),
+                        width: MediaQuery.of(context).size.width,
+                        height: 75,
+                        decoration: const BoxDecoration(
+                          color: Color(0x00fafafa),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                              child: Text(
+                                "Tanggal",
+                                textAlign: TextAlign.start,
+                                overflow: TextOverflow.clip,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 16,
+                                  color: Color(0xff000000),
                                 ),
-                              )),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-                      padding: const EdgeInsets.all(0),
-                      width: MediaQuery.of(context).size.width,
-                      height: 75,
-                      decoration: const BoxDecoration(
-                        color: Color(0x00000000),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                            child: Text(
-                              "Guru",
-                              textAlign: TextAlign.start,
-                              overflow: TextOverflow.clip,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 16,
-                                color: Color(0xff000000),
                               ),
                             ),
-                          ),
-                          Container(
-                              width: MediaQuery.of(context).size.width,
-                              height: 50,
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 8),
-                              decoration: BoxDecoration(
-                                color: MainColor.primaryBackground,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton(
-                                  value: selectedValueGuru,
-                                  items: itemsGuru.map((item) {
-                                    return DropdownMenuItem(
-                                      value: item['nama'],
-                                      child: Text(item['nama']),
-                                    );
-                                  }).toList(),
-                                  style: const TextStyle(
-                                    color: Color(0xff000000),
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w400,
-                                    fontStyle: FontStyle.normal,
-                                  ),
-                                  onChanged: (value) {
-                                    setState(() {
-                                      selectedValueGuru = value as String?;
-                                    });
-                                  },
-                                  elevation: 8,
-                                  isExpanded: true,
-                                ),
-                              )),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      margin: const EdgeInsets.symmetric(
-                          vertical: 0, horizontal: 20),
-                      padding: const EdgeInsets.all(0),
-                      width: MediaQuery.of(context).size.width,
-                      height: 110,
-                      decoration: const BoxDecoration(
-                        color: Color(0x00000000),
-                        shape: BoxShape.rectangle,
-                        borderRadius: BorderRadius.zero,
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 0),
-                            child: Text(
-                              "Catatan",
-                              textAlign: TextAlign.start,
-                              overflow: TextOverflow.clip,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontStyle: FontStyle.normal,
-                                fontSize: 16,
-                                color: Color(0xff000000),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: TextFormField(
-                              controller: catatanController,
+                            TextField(
+                              controller: _date,
                               obscureText: false,
                               textAlign: TextAlign.start,
-                              maxLines: 4,
+                              maxLines: 1,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w400,
                                 fontStyle: FontStyle.normal,
@@ -795,101 +524,492 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
                                   borderSide: const BorderSide(
                                       color: Color(0x00000000), width: 1),
                                 ),
+                                hintText: "Enter Text",
+                                hintStyle: const TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 14,
+                                  color: Color(0xff000000),
+                                ),
                                 filled: true,
                                 fillColor: MainColor.primaryBackground,
                                 isDense: false,
-                                contentPadding:
-                                    const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    vertical: 8, horizontal: 12),
+                                suffixIcon: const Icon(Icons.calendar_today,
+                                    color: Color(0xff212435), size: 24),
+                              ),
+                              onTap: () async {
+                                DateTime? pickedDate = await showDatePicker(
+                                    context: context,
+                                    initialDate: DateTime.now(),
+                                    firstDate: DateTime(2000),
+                                    lastDate: DateTime(2100));
+                                if (pickedDate != null) {
+                                  setState(() {
+                                    _date.text = DateFormat('yyyy-MM-dd')
+                                        .format(pickedDate);
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+                        padding: const EdgeInsets.all(0),
+                        width: double.infinity,
+                        height: 80,
+                        decoration: const BoxDecoration(
+                          color: Color(0x00ffffff),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.max,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
+                                  child: Text(
+                                    "Jam Ke",
+                                    textAlign: TextAlign.start,
+                                    overflow: TextOverflow.clip,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                      fontStyle: FontStyle.normal,
+                                      fontSize: 16,
+                                      color: Color(0xff000000),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                    width: 120,
+                                    height: 50,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 8),
+                                    decoration: BoxDecoration(
+                                      color: MainColor.primaryBackground,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton(
+                                        hint: const Text(
+                                          "Pilih Jam",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w400,
+                                            fontStyle: FontStyle.normal,
+                                            fontSize: 14,
+                                            color: Color(0xff000000),
+                                          ),
+                                        ),
+                                        value: selectedValueJam,
+                                        items: itemsJam.map((item) {
+                                          return DropdownMenuItem(
+                                            value: item['pukul'],
+                                            child: Text(item['pukul']),
+                                          );
+                                        }).toList(),
+                                        style: const TextStyle(
+                                          color: Color(0xff000000),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                          fontStyle: FontStyle.normal,
+                                        ),
+                                        onChanged: (value) {
+                                          setState(() {
+                                            selectedValueJam = value as String?;
+                                          });
+                                        },
+                                        elevation: 8,
+                                        isExpanded: true,
+                                      ),
+                                    )),
+                              ],
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 0, 0, 0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.max,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 5, 0, 5),
+                                      child: Text(
+                                        "Kelas",
+                                        textAlign: TextAlign.start,
+                                        overflow: TextOverflow.clip,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontStyle: FontStyle.normal,
+                                          fontSize: 16,
+                                          color: Color(0xff000000),
+                                        ),
+                                      ),
+                                    ),
+                                    Container(
+                                        height: 50,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4, horizontal: 8),
+                                        decoration: BoxDecoration(
+                                          color: MainColor.primaryBackground,
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton(
+                                            hint: const Text(
+                                              "Pilih Kelas",
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w400,
+                                                fontStyle: FontStyle.normal,
+                                                fontSize: 14,
+                                                color: Color(0xff000000),
+                                              ),
+                                            ),
+                                            value: selectedValueKelas,
+                                            items: itemsKelas.map((item) {
+                                              return DropdownMenuItem(
+                                                value: item['nama'],
+                                                child: Text(item['nama']),
+                                              );
+                                            }).toList(),
+                                            style: const TextStyle(
+                                              color: Color(0xff000000),
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w400,
+                                              fontStyle: FontStyle.normal,
+                                            ),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                selectedValueKelas =
+                                                    value as String?;
+                                              });
+                                            },
+                                            elevation: 8,
+                                            isExpanded: true,
+                                          ),
+                                        )),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Checkbox(
-                            // value: isAktif,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                isAktif = value ?? false;
-                              });
-                            },
-                            activeColor: MainColor.primaryColor,
-                            autofocus: false,
-                            checkColor: const Color(0xffffffff),
-                            hoverColor: const Color(0x42000000),
-                            splashRadius: 20,
-                            value: true,
-                          ),
-                          const Text(
-                            "Aktif",
-                            textAlign: TextAlign.start,
-                            overflow: TextOverflow.clip,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontStyle: FontStyle.normal,
-                              fontSize: 14,
-                              color: Color(0xff000000),
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
+                        padding: const EdgeInsets.all(0),
+                        width: MediaQuery.of(context).size.width,
+                        height: 75,
+                        decoration: const BoxDecoration(
+                          color: Color(0x00ffffff),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                              child: Text(
+                                "Pelajaran",
+                                textAlign: TextAlign.start,
+                                overflow: TextOverflow.clip,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 16,
+                                  color: Color(0xff000000),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                            Container(
+                                width: MediaQuery.of(context).size.width,
+                                height: 50,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: MainColor.primaryBackground,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton(
+                                    hint: const Text(
+                                      "Pilih Pelajaran",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w400,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 14,
+                                        color: Color(0xff000000),
+                                      ),
+                                    ),
+                                    value: selectedValuePelajaran,
+                                    items: itemsPelajaran.map((item) {
+                                      return DropdownMenuItem(
+                                        value: item['nama'],
+                                        child: Text(item['nama']),
+                                      );
+                                    }).toList(),
+                                    style: const TextStyle(
+                                      color: Color(0xff000000),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      fontStyle: FontStyle.normal,
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedValuePelajaran =
+                                            value as String?;
+                                      });
+                                    },
+                                    elevation: 8,
+                                    isExpanded: true,
+                                  ),
+                                )),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      Container(
+                        margin: const EdgeInsets.fromLTRB(20, 5, 20, 0),
+                        padding: const EdgeInsets.all(0),
+                        width: MediaQuery.of(context).size.width,
+                        height: 75,
+                        decoration: const BoxDecoration(
+                          color: Color(0x00000000),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                              child: Text(
+                                "Guru",
+                                textAlign: TextAlign.start,
+                                overflow: TextOverflow.clip,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 16,
+                                  color: Color(0xff000000),
+                                ),
+                              ),
+                            ),
+                            Container(
+                                width: MediaQuery.of(context).size.width,
+                                height: 50,
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: MainColor.primaryBackground,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton(
+                                    hint: const Text(
+                                      "Pilih Guru",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w400,
+                                        fontStyle: FontStyle.normal,
+                                        fontSize: 14,
+                                        color: Color(0xff000000),
+                                      ),
+                                    ),
+                                    value: selectedValueGuru,
+                                    items: itemsGuru.map((item) {
+                                      return DropdownMenuItem(
+                                        value: item['nama'],
+                                        child: Text(item['nama']),
+                                      );
+                                    }).toList(),
+                                    style: const TextStyle(
+                                      color: Color(0xff000000),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                      fontStyle: FontStyle.normal,
+                                    ),
+                                    onChanged: (value) {
+                                      setState(() {
+                                        selectedValueGuru = value as String?;
+                                      });
+                                    },
+                                    elevation: 8,
+                                    isExpanded: true,
+                                  ),
+                                )),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                            vertical: 0, horizontal: 20),
+                        padding: const EdgeInsets.all(0),
+                        width: MediaQuery.of(context).size.width,
+                        height: 110,
+                        decoration: const BoxDecoration(
+                          color: Color(0x00000000),
+                          shape: BoxShape.rectangle,
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 5, horizontal: 0),
+                              child: Text(
+                                "Catatan",
+                                textAlign: TextAlign.start,
+                                overflow: TextOverflow.clip,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 16,
+                                  color: Color(0xff000000),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 1,
+                              child: TextFormField(
+                                controller: catatanController,
+                                obscureText: false,
+                                textAlign: TextAlign.start,
+                                maxLines: 4,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontStyle: FontStyle.normal,
+                                  fontSize: 14,
+                                  color: Color(0xff000000),
+                                ),
+                                decoration: InputDecoration(
+                                  disabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4.0),
+                                    borderSide: const BorderSide(
+                                        color: Color(0x00000000), width: 1),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4.0),
+                                    borderSide: const BorderSide(
+                                        color: Color(0x00000000), width: 1),
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4.0),
+                                    borderSide: const BorderSide(
+                                        color: Color(0x00000000), width: 1),
+                                  ),
+                                  filled: true,
+                                  fillColor: MainColor.primaryBackground,
+                                  isDense: false,
+                                  contentPadding:
+                                      const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 5, 20, 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.max,
+                          children: [
+                            Checkbox(
+                              value: isAktif,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  isAktif = value ?? false;
+                                });
+                              },
+                              activeColor: MainColor.primaryColor,
+                              autofocus: false,
+                              checkColor: const Color(0xffffffff),
+                              hoverColor: const Color(0x42000000),
+                              splashRadius: 20,
+                            ),
+                            const Text(
+                              "Aktif",
+                              textAlign: TextAlign.start,
+                              overflow: TextOverflow.clip,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontStyle: FontStyle.normal,
+                                fontSize: 14,
+                                color: Color(0xff000000),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Align(
-              alignment: const AlignmentDirectional(0, 1),
-              child: Container(
-                margin: const EdgeInsets.only(top: 365),
-                padding: const EdgeInsets.fromLTRB(19, 22, 21, 24),
-                width: double.infinity,
-                height: 100,
-                decoration: const BoxDecoration(
-                  color: Color(0xff345ea8),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                ),
-                child: TextButton(
-                  // group34456KJR (4:1128)
-                  onPressed: isLoading
-                      ? null // Jangan aktifkan tombol saat sedang loading
-                      : () {
-                          setState(() {
-                            isLoading = true;
-                          });
-                          updateJadwal(widget.jadwalId);
-                        },
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    height: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xff4ab4de),
-                      borderRadius: BorderRadius.circular(20),
+              Align(
+                alignment: const AlignmentDirectional(0, 1),
+                child: Container(
+                  margin: const EdgeInsets.only(top: 365),
+                  padding: const EdgeInsets.fromLTRB(19, 22, 21, 24),
+                  width: double.infinity,
+                  height: 100,
+                  decoration: const BoxDecoration(
+                    color: Color(0xff345ea8),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
                     ),
-                    child: const Center(
-                      child: Center(
-                        child: Text(
-                          'Simpan',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontFamily: 'Poppins',
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                            height: 1.5,
-                            color: Color(0xffffffff),
+                  ),
+                  child: TextButton(
+                    // group34456KJR (4:1128)
+                    onPressed: isLoading
+                        ? null // Jangan aktifkan tombol saat sedang loading
+                        : () {
+                            setState(() {
+                              isLoading = true;
+                            });
+                            updateJadwal(widget.jadwalId);
+                          },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                    ),
+                    child: Container(
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xff4ab4de),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Center(
+                        child: Center(
+                          child: Text(
+                            'Simpan',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Poppins',
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              height: 1.5,
+                              color: Color(0xffffffff),
+                            ),
                           ),
                         ),
                       ),
@@ -897,8 +1017,8 @@ class _AdminJadwalFormEditState extends State<AdminJadwalFormEdit> {
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

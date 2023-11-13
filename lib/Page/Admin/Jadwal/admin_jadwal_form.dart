@@ -29,7 +29,7 @@ class _AdminJadwalFormState extends State<AdminJadwalForm> {
   TextEditingController catatanController = TextEditingController();
 
   //bool isAktif = true;
-  bool isAktif = false;
+  bool isAktif = true;
   // periode
   List<dynamic> itemsPeriode = []; // periode
   String? selectedValuePeriode; // pe
@@ -235,7 +235,7 @@ class _AdminJadwalFormState extends State<AdminJadwalForm> {
       'kelas': selectedValueKelas,
       'pelajaran': selectedValuePelajaran,
       'tenant_id': '651a3ea147a3d131b32ff353',
-      'is_aktif': '$isAktif'
+      'aktif': '$isAktif'
     };
     print('Request Body: $body');
 
@@ -530,9 +530,8 @@ class _AdminJadwalFormState extends State<AdminJadwalForm> {
                                         value: selectedValueJam,
                                         items: itemsJam.map((item) {
                                           return DropdownMenuItem(
-                                            value: item['jam_ke'].toString(),
-                                            child:
-                                                Text(item['jam_ke'].toString()),
+                                            value: item['pukul'],
+                                            child: Text(item['pukul']),
                                           );
                                         }).toList(),
                                         style: const TextStyle(
@@ -543,7 +542,7 @@ class _AdminJadwalFormState extends State<AdminJadwalForm> {
                                         ),
                                         onChanged: (value) {
                                           setState(() {
-                                            selectedValueJam = value;
+                                            selectedValueJam = value as String?;
                                           });
                                         },
                                         elevation: 8,
@@ -855,7 +854,7 @@ class _AdminJadwalFormState extends State<AdminJadwalForm> {
                               value: isAktif,
                               onChanged: (bool? value) {
                                 setState(() {
-                                  isAktif = value ?? false;
+                                  isAktif = value ?? true;
                                 });
                               },
                               activeColor: const Color(0xff3a57e8),
