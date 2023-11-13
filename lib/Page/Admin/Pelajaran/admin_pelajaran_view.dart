@@ -17,7 +17,7 @@ class AdminPelajaran extends StatefulWidget {
   State<AdminPelajaran> createState() => AdminPelajaranState();
 }
 
-enum SortOption { namaAscending, namaDescending, aktif }
+// enum SortOption { namaAscending, namaDescending, aktif }
 
 class AdminPelajaranState extends State<AdminPelajaran> {
   // final SortOption _sortOption = SortOption.namaAscending;
@@ -59,31 +59,6 @@ class AdminPelajaranState extends State<AdminPelajaran> {
     });
     // _sortPelajaranData();
   }
-
-  // void _sortPelajaranData() {
-  //   setState(() {
-  //     switch (_sortOption) {
-  //       case SortOption.namaAscending:
-  //         pelajaranData.sort((a, b) => a['nama'].compareTo(b['nama']));
-  //         break;
-  //       case SortOption.namaDescending:
-  //         pelajaranData.sort((a, b) => b['nama'].compareTo(a['nama']));
-  //         break;
-  //       case SortOption.aktif:
-  //         pelajaranData.sort((a, b) => a['is_aktif'] ? -1 : 1);
-  //         break;
-  //     }
-  //   });
-  // }
-//   void sortDataByName(bool ascending) {
-//   setState(() {
-//     filteredPelajaranData.sort((a, b) {
-//       final nameA = a['nama'].toString().toLowerCase();
-//       final nameB = b['nama'].toString().toLowerCase();
-//       return ascending ? nameA.compareTo(nameB) : nameB.compareTo(nameA);
-//     });
-//   });
-// }
 
   @override
   Widget build(BuildContext context) {
@@ -345,7 +320,7 @@ class PelajaranSearch {
     tenant = decodedToken['tenant_id'];
 
     String urlStr =
-        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-cari?tenant_id=$tenant&fields=jam_ke%2Cpukul&sort_order=ascending&page=1&limit=10';
+        'https://jurnalmengajar-1-r8590722.deta.app/pelajaran-cari?tenant_id=$tenant&fields=&sort_order=ascending&page=1&limit=10';
     if (searchText != null && searchText.isNotEmpty) {
       urlStr += '&search=${Uri.encodeQueryComponent(searchText)}';
     }
